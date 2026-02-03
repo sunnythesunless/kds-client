@@ -131,7 +131,7 @@ function LoginForm() {
                 </div>
 
                 <a
-                    href="http://localhost:3000/api/auth/google"
+                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/auth/google`}
                     className="w-full bg-slate-800/50 hover:bg-slate-800 border border-white/10 text-slate-200 font-medium py-3 rounded-lg flex items-center justify-center gap-3 transition-colors"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 // Default to localhost:3000 if env not set
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
     baseURL,
