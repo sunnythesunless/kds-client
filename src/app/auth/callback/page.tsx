@@ -1,41 +1,42 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const setAuth = useAuthStore(state => state.setAuth);
 
     useEffect(() => {
-        // Read the auth_transport cookie set by the backend
-        const cookies = document.cookie.split(';');
-        const authCookie = cookies.find(c => c.trim().startsWith('auth_transport='));
+        // Read the token from URL query parameter (base64 encoded)
+        const token = searchParams.get('token');
 
-        if (authCookie) {
+        if (token) {
             try {
-                const cookieValue = authCookie.split('=')[1];
-                const authData = JSON.parse(decodeURIComponent(cookieValue));
+                // Decode base64 and parse JSON
+                const authData = JSON.parse(atob(token));
 
                 // Set auth state
                 setAuth(authData.user, authData.accessToken, authData.refreshToken);
 
-                // Clear the cookie
-                document.cookie = 'auth_transport=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                // Clear the token from URL (security: don't leave tokens in browser history)
+                window.history.replaceState({}, '', '/auth/callback');
 
                 // Redirect to dashboard
                 router.push('/dashboard');
             } catch (error) {
-                console.error('Failed to parse auth cookie:', error);
+                console.error('Failed to parse auth token:', error);
                 router.push('/login?error=auth_failed');
             }
         } else {
-            // No cookie found, redirect to login
+            // No token found, redirect to login
             router.push('/login?error=no_auth');
         }
-    }, [router, setAuth]);
+    }, [router, setAuth, searchParams]);
 
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -46,3 +47,16 @@ export default function AuthCallbackPage() {
         </div>
     );
 }
+
+export default function AuthCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
+            </div>
+        }>
+            <AuthCallbackContent />
+        </Suspense>
+    );
+}
+
